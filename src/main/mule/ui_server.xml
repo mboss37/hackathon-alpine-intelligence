@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<flow name="themes" doc:id="3b0f6315-4a18-4708-8562-a5ce38549994">
+		<http:listener doc:name="Listener" doc:id="effa08ee-38b2-4267-a0e5-8e6d7a407319" config-ref="HTTP_Listener_config" path="/themes" />
+		<file:list doc:name="List" doc:id="b8093774-232f-4a04-8bec-a1be0958d56f" config-ref="Themes_File_Config" directoryPath=".">
+		</file:list>
+		<ee:transform doc:name="Transform Message" doc:id="1fddce4b-e8cc-456e-85bf-43d098b4a58d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ((theme) -> 
+    {
+        text: theme.payload.name,
+        value: theme.attributes.fileName
+    }
+)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="users" doc:id="c10d6dc9-053c-42bf-b395-3d641eb2d311" >
+		<http:listener doc:name="Listener" doc:id="b74d88c7-f85b-449e-bba8-c05b1956bad1" config-ref="HTTP_Listener_config" path="/users"/>
+		<choice doc:name="Determine Load Method" doc:id="0e1ea5ec-6e93-4ef6-8f5f-5e8520ce9c98" >
+			<when expression="#[p('users.type') == &quot;url&quot;]">
+				<http:request method="#[p('users.url.method')]" doc:name="Load from URL" doc:id="20325105-f9ce-4d1b-ab1f-da9f7b315a85" url="${users.url.url}" outputMimeType="application/json">
+					<http:body ><![CDATA[#[read(p('users.url.body'), 'application/json')]]]></http:body>
+					<http:headers ><![CDATA[#[read(p('users.url.headers'), 'application/json')]]]></http:headers>
+					<http:uri-params ><![CDATA[#[read(p('users.url.uri_params'), 'application/json')]]]></http:uri-params>
+					<http:query-params ><![CDATA[#[read(p('users.url.query_params'), 'application/json')]]]></http:query-params>
+				</http:request>
+			</when>
+			<otherwise >
+				<file:read doc:name="Load from File" doc:id="1f52d9f9-3ad3-4b42-b4cd-4a24da6f4412" path="${users.file.path}" outputMimeType="application/json"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="chatbot-ui-listener" doc:id="77b8ebb6-85a6-48c7-8b56-c957f72bbb13" >
+		<http:listener doc:name="Listener" doc:id="c06ab6e6-a8c7-4cf8-8690-c8bd83a17755" config-ref="HTTP_Listener_config" path="/*">
+			<http:error-response statusCode="#[vars.httpStatus]" />
+		</http:listener>
+		<ee:transform doc:name="Path rewrite" doc:id="b1d8af4e-6f0b-46f8-8cde-1c66f963c0d3" >
+			<ee:message >
+				<ee:set-attributes ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/java
+
+var passthru_routes = [
+	'/css',
+	'/js',
+	'/img',
+	'/assets'
+]
+
+var passthru_files = [
+	"json",
+	"png",
+	"jpeg",
+	"svg",
+	"ico"
+]
+
+fun remapRequestPath() =
+	if ( (passthru_routes contains substringBeforeLast(attributes.requestPath, '/')) or (passthru_files contains substringAfterLast(attributes.requestPath, '.')))
+		attributes.requestPath
+	else 
+		"/"
+---
+{
+requestPath: remapRequestPath(),
+listenerPath: attributes.listenerPath,
+rawRequestPath: attributes.rawRequestPath,
+relativePath: attributes.relativePath,
+version: attributes.version,
+scheme: attributes.scheme,
+method: attributes.method,
+requestUri: attributes.requestUri,
+rawRequestUri: attributes.rawRequestUri,
+queryString: attributes.queryString,
+localAddress: attributes.localAddress,
+remoteAddress: attributes.remoteAddress,
+queryParams: attributes.queryParams,
+uriParams: attributes.uriParams,
+headers: attributes.headers
+}
+
+as Object {
+
+class: "org.mule.extension.http.api.HttpRequestAttributes"
+
+}]]></ee:set-attributes>
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+		<http:load-static-resource doc:name="Send it!" doc:id="c762fe03-f482-4a6c-a9e6-be28b9080c12" resourceBasePath="${app.home}/dist">
+			<error-mapping sourceType="HTTP:NOT_FOUND" targetType="APP:404" />
+		</http:load-static-resource>
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6a8fd3cd-5919-4506-8832-7d6e3ef6c144" type="APP:404">
+				<set-variable value="404" doc:name="Set Variable" doc:id="57262ed3-b8a8-4aff-9eb0-80a38b570fb3" variableName="httpStatus" />
+			</on-error-propagate>
+		</error-handler>
+	
+</flow>
+	
+	
+</mule>

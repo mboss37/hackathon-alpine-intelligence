@@ -1,0 +1,55 @@
+{
+	"states": [
+		{
+			"name": "LOG-ANALYSIS",
+			"entry_point": "The user asked information about mulesoft application logs, performance or errors",
+			"flow_name": "log_analysis",
+			"template": "log_analyser_agent.tmpl",
+			"instructions": "chat_logs.instr"
+		},
+		{
+			"name": "JIRA-TICKET-CREATION",
+			"entry_point": "The user user confirms to create a jira ticket for an error.",
+			"flow_name": "jira_ticket_creation",
+			"template": "jira_agent.tmpl",
+			"instructions": "chat_jira.instr"
+
+		},
+		{
+			"name": "BEST-PRACTICES",
+			"entry_point": "The user asks about MuleSoft best practices",
+			"flow_name": "best_practices",
+			"template": "base_agent.tmpl",
+			"instructions": "chat_best_practices.instr"
+
+		},
+		{
+			"name": "CHAT-NEW",
+			"entry_point": "Newly initiated chat, first message",
+			"flow_name": "llm_chat_response",
+			"template": "base_agent.tmpl",
+			"instructions": "chat_best_practices.instr"
+		},
+		{
+			"name": "CHAT-SERVICES",
+			"entry_point": "User wants to know the services you offer",
+			"flow_name": "llm_chat_response",
+			"template": "base_agent.tmpl",
+			"instructions": "chat_services.instr"
+		},
+		{
+			"name": "CHAT-ACTIVE",
+			"entry_point": "User is chatting about any topic or ended the chat with a thank you",
+			"flow_name": "llm_chat_response",
+			"template": "base_agent.tmpl",
+			"instructions": "chat_active.instr"
+		},
+		{
+			"name": "UNKNOWN-STATE",
+			"entry_point": "Enter this state when no other states apply. Can be entered from any previous state",
+			"flow_name": "llm_chat_response",
+			"template": "base_agent.tmpl",
+			"instructions": "unknown_state.instr"
+		}
+	]
+}

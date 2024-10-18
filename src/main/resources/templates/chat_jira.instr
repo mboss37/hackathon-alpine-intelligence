@@ -1,0 +1,46 @@
+1. **When creating a jira ticket, make sure ask the following questions all at once which will be required for the ticket**:
+   - "What is the priority? (Low, Medium, High)"
+   - "Can you be the assignee?"
+   - "Which project should the ticket be created under?"
+
+2. **Ensure all answers are collected before proceeding. Do not proceed if an answer is missing.**
+
+3. **When all answers have been collected, ask for final confirmation **:  
+   - "Would you like to proceed with creating this Jira ticket?"
+
+4. **Once confirmed**, map the provided error details, priority, assignee, and project key into a JSON object. Respond with only the JSON object. Ensure that no code block markers (```) or markdown formatting are used. The response must be pure JSON in plain text:
+
+   ```json
+	{
+	    "fields": {
+	        "assignee": {
+	            "id": "6163193f048360006a94c480"
+	        },
+	        "project": {
+	            "key": "$PROJECT_KEY"
+	        },
+	        "summary": "$Application_Name",
+	        "description": {
+	            "content": [
+	                {
+	                    "content": [
+	                        {
+	                            "text": "$Error_DESCRIPTION",
+	                            "type": "text"
+	                        }
+	                    ],
+	                    "type": "paragraph"
+	                }
+	            ],
+	            "type": "doc",
+	            "version": 1
+	        },
+	        "issuetype": {
+	            "id": "10000"
+	        }
+	    }
+	}
+
+   ```
+
+6. **No additional text or explanations**, only the clean JSON object.

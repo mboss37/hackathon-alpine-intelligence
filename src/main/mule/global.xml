@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ms-aichain="http://www.mulesoft.org/schema/mule/ms-aichain"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ms-aichain http://www.mulesoft.org/schema/mule/ms-aichain/current/mule-ms-aichain.xsd">
+	<file:config name="Template_File_Config" doc:name="File Config" doc:id="bc105b67-4417-48c3-8444-a4b0bf777fe4" >
+		<file:connection workingDir="${templates.folder}"/>
+	</file:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="080fe9fe-ff10-4654-a74c-7c26f4ee72e4" file="config.yaml" />
+	<file:config name="State_File_Config" doc:name="File Config" doc:id="13cd393c-65f0-401a-972d-04b331b33a2f" >
+		<file:connection workingDir="${state_llm.foundation_prompt.path}" />
+	</file:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="16d3e55d-ec13-4cea-b946-9fb9013dada6" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+		<http:listener-interceptors >
+			<http:cors-interceptor >
+				<http:origins >
+					<http:public-resource />
+				</http:origins>
+			</http:cors-interceptor>
+		</http:listener-interceptors>
+	</http:listener-config>
+	<ms-aichain:config name="Chat_Response_LLM_Config" llmType="OPENAI" configType="Configuration Json" modelName="gpt-4o" doc:name="MuleSoft AI Chain Config" doc:id="79e6e552-2593-4fc0-9be1-47d82d81d4c3" filePath='${app.home}/envVars.json' maxTokens="4096" />
+	<ms-aichain:config name="RMA_State_LLM_Config" llmType="OPENAI" configType="Configuration Json" modelName="gpt-4o" doc:name="MuleSoft AI Chain Config" doc:id="bfaf8d2a-ad32-4e9f-8fa7-c84d147a22e3" filePath="${app.home}/envVars.json" temperature="0.8" maxTokens="4096" />
+	<file:config name="Themes_File_Config" doc:name="File Config" doc:id="716a71f3-05b5-4133-9966-f38bd375c1fb" >
+		<file:connection workingDir="${themes.folder}" />
+	</file:config>
+
+</mule>

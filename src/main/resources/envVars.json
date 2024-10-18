@@ -1,0 +1,22 @@
+{
+    "OPENAI": {
+        "OPENAI_API_KEY": ""
+    },
+    "MISTRAL_AI": {
+        "MISTRAL_AI_API_KEY": ""
+    },
+    "OLLAMA": {
+        "OLLAMA_BASE_URL": "http://baseurl.ollama.com"
+    },
+    "GROQAI_OPENAI": {
+        "GROQ_API_KEY": ""
+    },
+    "ANTHROPIC": {
+        "ANTHROPIC_API_KEY": ""
+    },
+    "AZURE_OPENAI": {
+        "AZURE_OPENAI_KEY": "",
+        "AZURE_OPENAI_ENDPOINT": "http://endpoint.azure.com",
+        "AZURE_OPENAI_DEPLOYMENT_NAME": "YOUR_DEPLOYMENT_NAME"
+    }
+}

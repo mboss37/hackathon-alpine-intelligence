@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_84a6649a_98b6_419a_8685_4ec8b0dcd622_Input_Payload = {| prompt: Any |}
+

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:mulechain="http://www.mulesoft.org/schema/mule/mulechain" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/mulechain http://www.mulesoft.org/schema/mule/mulechain/current/mule-mulechain.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<flow name="main_chat_entry" doc:id="05907e27-5805-4bda-b05f-511a3b7e81c6" >
+		<http:listener doc:name="Listener" doc:id="43f97b43-8abc-4edf-8558-f0ca4b1ab7dc" config-ref="HTTP_Listener_config" path="/chat"/>
+		<ee:transform doc:name="Prepare Incoming Payload" doc:id="e97c7787-634a-4922-955c-e4511f28127a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	prompt: payload.messages[0].text
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[{&#10;	chat_id: attributes.queryParams.chat_id,&#10;	employee_id: attributes.queryParams.employee_id&#10;}]" doc:name="Store Chat Session Data" doc:id="96de7148-bea1-49cf-9fc9-83ca11e23a5e" variableName="session"/>
+		<set-variable value="#[payload.prompt]" doc:name="Store User Prompt" doc:id="2c7fe0c7-5866-4b31-b977-b0e7c50640f1" variableName="user_prompt"/>
+		<os:retrieve doc:name="Load Memory" doc:id="cf5c77ac-89b9-49a6-8742-bb027af9beb1" key="#[vars.session.chat_id]" target="memory">
+			<os:default-value ><![CDATA[#[output application/json
+---
+{
+	chat_history: [],
+	state: "CHAT-NEW"
+}]]]></os:default-value>
+		</os:retrieve>
+		<set-variable value='#[%dw 2.0&#10;output text/plain&#10;var history_prefix = "====== BEGIN CHAT HISTORY ======\n"&#10;var history_suffix = "====== END CHAT HISTORY ======\n\n"&#10;---&#10;vars.memory.chat_history reduce ((msg, acc=history_prefix) -&gt;&#10;    acc ++ "role: $(msg.role)\ntext: $(msg.text)\n"&#10;) ++ history_suffix]' doc:name="Build Chat History" doc:id="148ec792-f9ea-4cb9-970f-af034235b7f9" variableName="chat_history"/>
+		<flow-ref doc:name="Determine Current State" doc:id="11fabcf2-7b4e-4eca-abdf-f4811557964a" name="state_manager" target="next_step"/>
+		<set-variable value="#[output application/json&#10;---&#10;vars.memory update {&#10;	case .state! -&gt; vars.next_step.state&#10;}]" doc:name="Update Memory Chat State" doc:id="08d38a98-f272-4835-b2fa-4d7c034efdcd" variableName="memory"/>
+		<flow-ref doc:name="Load Templates for Next Flow" doc:id="3b23ce3c-a93a-4a8a-b613-ae2dc7b5785f" name="load_templates" target="templates"/>
+		<set-payload value="#[vars.next_step.payload]" doc:name="Prepare Payload for Next Flow" doc:id="f75d1c0f-adf1-422d-9944-c2e48ac51bbc" />
+		<flow-ref doc:name="Call Next Flow" doc:id="2796d716-4f3d-4e43-824f-8903374d36e6" name="#[vars.next_step.flow_name as String]" />
+		<set-variable value='#[vars.memory update {&#10;	case history at .chat_history -&gt; history ++ [&#10;		{&#10;			role: "user",&#10;			text: vars.user_prompt&#10;		},&#10;		{&#10;			role: "assistant",&#10;			text: payload.response&#10;		}&#10;	]&#10;}]' doc:name="Update Chat History" doc:id="7088bb36-6319-41f7-8acb-f955d361d077" variableName="memory" />
+		<os:store doc:name="Update Memory" doc:id="49869f25-b559-4af2-a7e5-ad3d18fd6478" key="#[vars.session.chat_id]">
+			<os:value ><![CDATA[#[vars.memory update {
+	case .chat_state -> vars.current_state
+}]]]></os:value>
+		</os:store>
+	</flow>
+</mule>

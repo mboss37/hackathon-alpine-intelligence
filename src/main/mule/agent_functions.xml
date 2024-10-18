@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ms-aichain="http://www.mulesoft.org/schema/mule/ms-aichain" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:rmaapi="http://www.mulesoft.org/schema/mule/rmaapi"
+	xmlns:asset-information="http://www.mulesoft.org/schema/mule/asset-information" xmlns:employee-information-api="http://www.mulesoft.org/schema/mule/employee-information-api" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/employee-information-api http://www.mulesoft.org/schema/mule/employee-information-api/current/mule-employee-information-api.xsd
+http://www.mulesoft.org/schema/mule/asset-information http://www.mulesoft.org/schema/mule/asset-information/current/mule-asset-information.xsd
+http://www.mulesoft.org/schema/mule/rmaapi http://www.mulesoft.org/schema/mule/rmaapi/current/mule-rmaapi.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ms-aichain http://www.mulesoft.org/schema/mule/ms-aichain/current/mule-ms-aichain.xsd">	
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="c652d410-c8dc-4e02-bc99-8fe3f46c6ab2" >
+		<http:request-connection protocol="HTTPS" host="mihael-bosnjak.atlassian.net" >
+			<http:authentication >
+				<http:basic-authentication username="mihael.bosnjak87@gmail.com" password="addYourKeyHere" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+	<sub-flow name="jira_ticket_creation" doc:id="65aee716-e1bc-4458-b448-81de68847713" >
+		<flow-ref doc:name="llm_chat_response" doc:id="13646bac-d35e-4bad-bb8e-840388e64865" name="llm_chat_response"/>
+		<set-variable value="#[%dw 2.0&#10;output application/json&#10;import try, fail from dw::Runtime&#10;&#10;---&#10;try(() -&gt; read(payload.response)).success]" doc:name="Set Variable" doc:id="fdf95ab5-866c-471d-8e6d-66832a2f253f" variableName="isJiraObject"/>
+		<choice doc:name="Choice" doc:id="9a963b81-a5d7-461f-b171-698a885dd1ba" >
+			<when expression="#[vars.isJiraObject]">
+				<ee:transform doc:name="Prepare Jira Request" doc:id="63630949-4fe7-4e56-8a32-a9e736cfc941">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+import * from dw::util::Values
+output application/json
+---
+payload update "response" with read(payload.response)]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<http:request method="POST" doc:name="Create Jira Ticket" doc:id="4a2aa9e4-4a18-48fc-9c37-49f5bb9b2e3b" config-ref="HTTP_Request_configuration" path="/rest/api/3/issue" target="jiraResponse">
+					<http:body ><![CDATA[#[payload.response]]]></http:body>
+				</http:request>
+				<ee:transform doc:name="Generate Static Response" doc:id="2496c667-771b-40fa-a4a5-3bd99c75a461">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import * from dw::util::Values
+output application/json
+
+---
+payload update "response" with ("Your ticket has been successfuly created: " ++ vars.jiraResponse.self)
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+		</choice>
+	</sub-flow>
+	<sub-flow name="llm_chat_response" doc:id="1912de73-0e31-4868-98d6-d07810035d97">
+		<ms-aichain:agent-define-prompt-template doc:name="Generate Chat Response" doc:id="5b1a079e-fbb7-4fe8-87b7-e3e79007d181" config-ref="Chat_Response_LLM_Config">
+			<ms-aichain:dataset><![CDATA[#[payload.prompt]]]></ms-aichain:dataset>
+			<ms-aichain:template><![CDATA[#[vars.templates.template]]]></ms-aichain:template>
+			<ms-aichain:instructions><![CDATA[#[vars.templates.instructions default ""]]]></ms-aichain:instructions>
+		</ms-aichain:agent-define-prompt-template>
+		<ee:transform doc:name="Append Chat State and Token Usage" doc:id="f628add2-d76f-4f7a-8859-e48ab8043ac6">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload ++
+{
+	chat_state: vars.memory.state,
+	tokenUsage: attributes.tokenUsage
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="log_analysis" doc:id="cb418465-68e6-4c21-94b2-b015c635f9bb" >
+		<set-variable value="#[p('embedding.logs.store_path')]" doc:name="Set StoreName" doc:id="5cb3e58f-b5c3-4072-8e1a-e55962c253cb" variableName="storeName"/>
+		<flow-ref doc:name="query_knowledge_store" doc:id="3319fece-7629-49e6-aec4-5d0b03809d95" name="query_knowledge_store" target="log_info" />
+		<ee:transform doc:name="Transform Message" doc:id="223d811b-27e0-4bd4-8edd-8a2e894b50b7" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="log_info" ><![CDATA[%dw 2.0
+output application/json
+
+var logs = {
+  "sources": [
+    {
+      "absoluteDirectoryPath": "/Applications/AnypointStudio.app/Contents/Eclipse/plugins/org.mule.tooling.server.4.7.ee_7.18.0.202405262218/mule/apps/alpine-intelligence/docs/logs",
+      "fileName": "909efc_c4f087_2024-10-07T23-07-46Z.log",
+      "textSegment": "********************************************************************************\n* APIKit Router 'muletalks-s-salesforce-api-config' started using Parser: AMF  *\n********************************************************************************\n2024-09-27T20:35:23.32Z INFO [s65sj] FlowConstructLifecycleManager main - Initialising flow: post:\\query:application\\json:muletalks-s-salesforce-api-config\n2024-09-27T20:35:23.606Z INFO [s65sj] OpenTelemetrySpanExporterFactory main - Mule Open Telemetry Tracer Exporter is enabled.\n2024-09-27T20:35:24.025Z INFO [s65sj] QueueXaResourceManager main - Starting ResourceManager\n2024-09-27T20:35:24.025Z INFO [s65sj] QueueXaResourceManager main - Started ResourceManager\n2024-09-27T20:35:27.618Z WARN [s65sj] ApplicationDeploymentListener main - creating custom anypoint file appender\n2024-09-27T20:35:27.618Z INFO [s65sj] ApplicationDeploymentListener main - Non-console appender found\n2024-09-27T20:35:27.618Z INFO [s65sj] ApplicationDeploymentListener main - Disabling console logging\n2024-09-27T20:35:27.72Z INFO [s65sj] AbstractConnector main - Started ServerConnector@3291d9c2{HTTP/1.1, (http/1.1)}{127.0.0.1:7777}\n2024-10-07T12:38:40.116Z INFO [s65sj] LoggerMessageProcessor event:ae8c6abf-bf97-462e-9d1e-f16e0bb460d5 [MuleRuntime].uber.21: [mac-salesforce-system-api].post:\\query:application\\json:muletalks-s-salesforce-api-config.CPU_LITE @4dc7a2a3 - {\n  \"soql\": \"SELECT Id, Name, CreatedDate FROM Lead ORDER BY CreatedDate DESC LIMIT 1\"\n}\n2024-10-07T12:38:40.309Z WARN [s65sj] ForceWSCConnection event:ae8c6abf-bf97-462e-9d1e-f16e0bb460d5 [MuleRuntime].uber.20: [mac-salesforce-system-api].post:\\query:application\\json:muletalks-s-salesforce-api-config.BLOCKING @9444b2e - Couldn't execute action over partner client because an unexpected error has occurred. An exception will be thrown. Root exception was: [UnexpectedErrorFault [ApiFault  exceptionCode='INVALID_SESSION_ID'\n exceptionMessage='Invalid Session ID found in SessionHeader: Illegal Session. Session not found, missing session hash: EWos7n33EWSy+VrIoLed/qylg94YW+JomKIkfdRjpxI=\nThis error usually occurs after a session expires or a user logs out. Decoder: DataInDbSessionKeyDecoder'\n extendedErrorDetails='{[0]}'\n]\n]",
+      "individualScore": 0.743975352278391
+    },
+    {
+      "absoluteDirectoryPath": "/Applications/AnypointStudio.app/Contents/Eclipse/plugins/org.mule.tooling.server.4.7.ee_7.18.0.202405262218/mule/apps/alpine-intelligence/docs/logs",
+      "fileName": "909efc_c4f087_2024-10-07T23-07-46Z.log",
+      "textSegment": "Element DSL           : <apikit:router config-ref=\"muletalks-s-salesforce-api-config\"></apikit:router>\nError type            : APIKIT:NOT_FOUND\nFlowStack             : at muletalks-s-salesforce-api-main(muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20)\n\n(set debug level logging or '-Dmule.verbose.exceptions=true' for everything)\n********************************************************************************\n2024-10-07T23:07:17.934Z WARN [s65sj] Configuration event:cd3f1593-39bc-41ff-9f02-50cdbcbdc0a7 [MuleRuntime].uber.150: [mac-salesforce-system-api].muletalks-s-salesforce-api-main.CPU_LITE @30c39288 - No matching patterns for URI /\n2024-10-07T23:07:17.935Z ERROR [s65sj] DefaultExceptionListener event:cd3f1593-39bc-41ff-9f02-50cdbcbdc0a7 [MuleRuntime].uber.150: [mac-salesforce-system-api].muletalks-s-salesforce-api-main.CPU_LITE @30c39288 - \n********************************************************************************\nMessage               : /\nElement               : muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20\nElement DSL           : <apikit:router config-ref=\"muletalks-s-salesforce-api-config\"></apikit:router>\nError type            : APIKIT:NOT_FOUND\nFlowStack             : at muletalks-s-salesforce-api-main(muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20)\n\n(set debug level logging or '-Dmule.verbose.exceptions=true' for everything)\n********************************************************************************",
+      "individualScore": 0.7329064897291859
+    }
+  ],
+  "response": "********************************************************************************\n* APIKit Router 'muletalks-s-salesforce-api-config' started using Parser: AMF  *\n********************************************************************************\n2024-09-27T20:35:23.32Z INFO [s65sj] FlowConstructLifecycleManager main - Initialising flow: post:\\query:application\\json:muletalks-s-salesforce-api-config\n2024-09-27T20:35:23.606Z INFO [s65sj] OpenTelemetrySpanExporterFactory main - Mule Open Telemetry Tracer Exporter is enabled.\n2024-09-27T20:35:24.025Z INFO [s65sj] QueueXaResourceManager main - Starting ResourceManager\n2024-09-27T20:35:24.025Z INFO [s65sj] QueueXaResourceManager main - Started ResourceManager\n2024-09-27T20:35:27.618Z WARN [s65sj] ApplicationDeploymentListener main - creating custom anypoint file appender\n2024-09-27T20:35:27.618Z INFO [s65sj] ApplicationDeploymentListener main - Non-console appender found\n2024-09-27T20:35:27.618Z INFO [s65sj] ApplicationDeploymentListener main - Disabling console logging\n2024-09-27T20:35:27.72Z INFO [s65sj] AbstractConnector main - Started ServerConnector@3291d9c2{HTTP/1.1, (http/1.1)}{127.0.0.1:7777}\n2024-10-07T12:38:40.116Z INFO [s65sj] LoggerMessageProcessor event:ae8c6abf-bf97-462e-9d1e-f16e0bb460d5 [MuleRuntime].uber.21: [mac-salesforce-system-api].post:\\query:application\\json:muletalks-s-salesforce-api-config.CPU_LITE @4dc7a2a3 - {\n  \"soql\": \"SELECT Id, Name, CreatedDate FROM Lead ORDER BY CreatedDate DESC LIMIT 1\"\n}\n2024-10-07T12:38:40.309Z WARN [s65sj] ForceWSCConnection event:ae8c6abf-bf97-462e-9d1e-f16e0bb460d5 [MuleRuntime].uber.20: [mac-salesforce-system-api].post:\\query:application\\json:muletalks-s-salesforce-api-config.BLOCKING @9444b2e - Couldn't execute action over partner client because an unexpected error has occurred. An exception will be thrown. Root exception was: [UnexpectedErrorFault [ApiFault  exceptionCode='INVALID_SESSION_ID'\n exceptionMessage='Invalid Session ID found in SessionHeader: Illegal Session. Session not found, missing session hash: EWos7n33EWSy+VrIoLed/qylg94YW+JomKIkfdRjpxI=\nThis error usually occurs after a session expires or a user logs out. Decoder: DataInDbSessionKeyDecoder'\n extendedErrorDetails='{[0]}'\n]\n]\n\nElement DSL           : <apikit:router config-ref=\"muletalks-s-salesforce-api-config\"></apikit:router>\nError type            : APIKIT:NOT_FOUND\nFlowStack             : at muletalks-s-salesforce-api-main(muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20)\n\n(set debug level logging or '-Dmule.verbose.exceptions=true' for everything)\n********************************************************************************\n2024-10-07T23:07:17.934Z WARN [s65sj] Configuration event:cd3f1593-39bc-41ff-9f02-50cdbcbdc0a7 [MuleRuntime].uber.150: [mac-salesforce-system-api].muletalks-s-salesforce-api-main.CPU_LITE @30c39288 - No matching patterns for URI /\n2024-10-07T23:07:17.935Z ERROR [s65sj] DefaultExceptionListener event:cd3f1593-39bc-41ff-9f02-50cdbcbdc0a7 [MuleRuntime].uber.150: [mac-salesforce-system-api].muletalks-s-salesforce-api-main.CPU_LITE @30c39288 - \n********************************************************************************\nMessage               : /\nElement               : muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20\nElement DSL           : <apikit:router config-ref=\"muletalks-s-salesforce-api-config\"></apikit:router>\nError type            : APIKIT:NOT_FOUND\nFlowStack             : at muletalks-s-salesforce-api-main(muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20)\n\n(set debug level logging or '-Dmule.verbose.exceptions=true' for everything)\n********************************************************************************"
+}
+---
+if (isEmpty(vars.log_info.source)) logs else payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b82e00b2-644e-492e-a339-f1f26455afa4" message="#[%dw 2.0&#10;output application/json&#10;---&#10;vars.log_info]"/>
+		<ee:transform doc:name="Augment Prompt" doc:id="c51585ee-cbb1-4184-aa04-eea931449b49" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    prompt: payload.prompt ++ "n\nLOGS:\n" ++ vars.log_info.response
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="7110e151-5098-4c7b-8a59-31d73dc6cc21" message="#[%dw 2.0&#10;output application/json&#10;---&#10;vars.templates]" />
+		<flow-ref doc:name="llm_chat_response" doc:id="641d067b-fb8e-40ac-8888-55a2a1ef328c" name="llm_chat_response" />
+	</sub-flow>
+	<sub-flow name="best_practices" doc:id="115af64e-d178-43a1-ba5a-3d4ec801a2e5" >
+		<set-variable value="#[p('embedding.best_practices.store_path')]" doc:name="Set StoreName" doc:id="44c6abaf-a537-4670-b480-7be7a5b5284b" variableName="storeName"/>
+		<flow-ref doc:name="query_knowledge_store" doc:id="6a0383be-d2cc-4490-83fa-2f2f1b54709a" name="query_knowledge_store" target="best_practices" />
+		<logger level="INFO" doc:name="Logger" doc:id="ea48c732-2ecc-40f1-9b01-e5eaad1a672c" message="#[%dw 2.0&#10;output application/json&#10;---&#10;vars.best_practices]" />
+		<ee:transform doc:name="Augment Prompt" doc:id="0a74e33f-c355-4069-93ca-287ec7248e52" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    prompt: payload.prompt ++ "n\nBEST PRACTICES:\n" ++ vars.best_practices.response
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="3d8efe9c-9c50-4810-8509-920248b706c6" message="#[%dw 2.0&#10;output application/json&#10;---&#10;vars.templates]" />
+		<flow-ref doc:name="llm_chat_response" doc:id="8c7860db-e067-467a-810b-f720cf890f29" name="llm_chat_response" />
+	</sub-flow>
+</mule>

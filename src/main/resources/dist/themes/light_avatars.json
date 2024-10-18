@@ -1,0 +1,68 @@
+{
+    "name": "Catppuccin Latte",
+    "page_title": "Alpine Intelligence Xcelerator",
+    "logo_image": "logo.png",
+    "logo_max_width": "70px",
+    "logo_max_height": "70px",
+    "title_bar_background": "#dc8a78",
+    "title_bar_text_color": "#eff1f5",
+    "page_background": "#eff1f5",
+    "chat_background": "#eff1f5",
+    "avatars": {
+        "default": { "styles": { "position": "left", "src": "user_avatar.png"} },
+        "ai": { "src": "ai_avatar.png" },
+        "user": { "src": "user_avatar.png" }
+    },
+    "messages": {
+        "styles": {
+            "default": {
+                "shared": {
+                    "bubble": {
+                    "maxWidth": "100%",
+                    "backgroundColor": "unset",
+                    "marginTop": "10px",
+                    "marginBottom": "10px",
+                    "fontSize": "1.15rem"
+                    }
+                },
+                "user": {
+                    "bubble": {
+                    "marginLeft": "0px",
+                    "color": "#4c4f69"
+                    }
+                },
+                "ai": {
+                    "outerContainer": {
+                    "backgroundColor": "#e6e9ef",
+                    "borderTop": "1px solid #ccd0da",
+                    "borderBottom": "1px solid #ccd0da"
+                    }
+                }
+            }
+        }
+    },
+    "input_box": { "fontSize": "1.15rem", "margin-bottom": "10px" },
+    "textInput":{
+        "styles": {
+            "text": {"color": "#4c4f69"},
+            "container": {"maxHeight": "50px", "backgroundColor": "#e6e9ef"},
+            "focus": {"border": "1px solid #8839ef"}
+        },
+        "placeholder": {"text": "Ask me anything...", "style": {"color": "#9ca0b0"}},
+        "characterLimit": 2000
+    },
+    "status_bar": {
+        "enabled": true,
+        "background": "#dc8a78",
+        "text_color": "#eff1f5",
+        "sections": {
+            "url": true,
+            "chat_state": true,
+            "token_count": true,
+            "model_version": false,
+            "streaming": false,
+            "tokenize": false,
+            "themes": true
+        }
+    }
+}

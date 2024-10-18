@@ -1,0 +1,77 @@
+{
+    "name": "Catppuccin",
+    "page_title": "Alpine Intelligence Xcelerator",
+    "logo_image": "logo.png",
+    "logo_max_width": "70px",
+    "logo_max_height": "70px",
+    "title_bar_background": "#1e1e2e",
+    "title_bar_text_color": "#cdd6f4",
+    "page_background": "#1e1e2e",
+    "chat_background": "#181825",
+    "avatars": {
+        "default": { "styles": { "position": "left", "src": "user_avatar.png"} },
+        "ai": { "src": "ai_avatar.png" },
+        "user": { "src": "user_avatar.png" }
+    },
+    "names": {
+        "default": {"style": {"fontSize": "18px", "marginTop": "14px", "width": "100px", "color": "#cdd6f4"}},
+        "ai": {"text": "Assistant"},
+        "user": {"text": "User", "position": "left"}
+    },
+    "messages": {
+        "styles": {
+            "default": {
+                "shared": {
+                    "bubble": {
+                    "maxWidth": "100%",
+                    "backgroundColor": "unset",
+                    "marginTop": "10px",
+                    "marginBottom": "10px",
+                    "fontSize": "1.15rem"
+                    }
+                },
+                "user": {
+                    "bubble": {
+                        "marginLeft": "0px",
+                        "color": "#cdd6f4"
+                    }
+                },
+                "ai": {
+                    "bubble": {
+                        "marginLeft": "0px",
+                        "color": "#cdd6f4"
+                    },
+                    "outerContainer": {
+                        "backgroundColor": "#313244",
+                        "borderTop": "2px solid #45475a",
+                        "borderBottom": "2px solid #45475a"
+                    }
+                }
+            }
+        }
+    },
+    "input_box": { "fontSize": "1.15rem", "margin-bottom": "10px" },
+    "textInput":{
+        "styles": {
+            "text": {"color": "#cdd6f4"},
+            "container": {"maxHeight": "50px", "backgroundColor": "#313244"},
+            "focus": {"border": "1px solid #89b4fa"}
+        },
+        "placeholder": {"text": "Ask me anything...", "style": {"color": "#6c7086"}},
+        "characterLimit": 2000
+    },
+    "status_bar": {
+        "enabled": true,
+        "background": "#11111b",
+        "text_color": "#cdd6f4",
+        "sections": {
+            "url": true,
+            "chat_state": true,
+            "token_count": true,
+            "model_version": false,
+            "streaming": false,
+            "tokenize": false,
+            "themes": true
+        }
+    }
+}

@@ -1,0 +1,98 @@
+
+********************************************************************************
+* APIKit Router 'muletalks-s-salesforce-api-config' started using Parser: AMF  *
+********************************************************************************
+2024-09-27T20:35:23.32Z INFO [s65sj] FlowConstructLifecycleManager main - Initialising flow: post:\query:application\json:muletalks-s-salesforce-api-config
+2024-09-27T20:35:23.606Z INFO [s65sj] OpenTelemetrySpanExporterFactory main - Mule Open Telemetry Tracer Exporter is enabled.
+2024-09-27T20:35:24.025Z INFO [s65sj] QueueXaResourceManager main - Starting ResourceManager
+2024-09-27T20:35:24.025Z INFO [s65sj] QueueXaResourceManager main - Started ResourceManager
+2024-09-27T20:35:27.618Z WARN [s65sj] ApplicationDeploymentListener main - creating custom anypoint file appender
+2024-09-27T20:35:27.618Z INFO [s65sj] ApplicationDeploymentListener main - Non-console appender found
+2024-09-27T20:35:27.618Z INFO [s65sj] ApplicationDeploymentListener main - Disabling console logging
+2024-09-27T20:35:27.72Z INFO [s65sj] AbstractConnector main - Started ServerConnector@3291d9c2{HTTP/1.1, (http/1.1)}{127.0.0.1:7777}
+2024-10-07T12:38:40.116Z INFO [s65sj] LoggerMessageProcessor event:ae8c6abf-bf97-462e-9d1e-f16e0bb460d5 [MuleRuntime].uber.21: [mac-salesforce-system-api].post:\query:application\json:muletalks-s-salesforce-api-config.CPU_LITE @4dc7a2a3 - {
+  "soql": "SELECT Id, Name, CreatedDate FROM Lead ORDER BY CreatedDate DESC LIMIT 1"
+}
+2024-10-07T12:38:40.309Z WARN [s65sj] ForceWSCConnection event:ae8c6abf-bf97-462e-9d1e-f16e0bb460d5 [MuleRuntime].uber.20: [mac-salesforce-system-api].post:\query:application\json:muletalks-s-salesforce-api-config.BLOCKING @9444b2e - Couldn't execute action over partner client because an unexpected error has occurred. An exception will be thrown. Root exception was: [UnexpectedErrorFault [ApiFault  exceptionCode='INVALID_SESSION_ID'
+ exceptionMessage='Invalid Session ID found in SessionHeader: Illegal Session. Session not found, missing session hash: EWos7n33EWSy+VrIoLed/qylg94YW+JomKIkfdRjpxI=
+This error usually occurs after a session expires or a user logs out. Decoder: DataInDbSessionKeyDecoder'
+ extendedErrorDetails='{[0]}'
+]
+]
+
+	at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+	at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)
+	at java.base/java.lang.reflect.ReflectAccess.newInstance(ReflectAccess.java:128)
+	at java.base/jdk.internal.reflect.ReflectionFactory.newInstance(ReflectionFactory.java:347)
+	at java.base/java.lang.Class.newInstance(Class.java:645)
+	at com.sforce.ws.bind.TypeMapper.readSingle(TypeMapper.java:721)
+	at reactor.core@3.6.4/reactor.core.publisher.FluxPeekFuseable$PeekFuseableConditionalSubscriber.onNext(FluxPeekFuseable.java:503)
+	at org.mule.runtime.core@4.7.3/org.mule.runtime.core.privileged.processor.chain.AbstractMessageProcessorChain$2.onNext(Abstra
+2024-10-07T12:38:40.325Z ERROR [s65sj] DefaultExceptionListener event:ae8c6abf-bf97-462e-9d1e-f16e0bb460d5 [MuleRuntime].uber.20: [mac-salesforce-system-api].post:\query:application\json:muletalks-s-salesforce-api-config.BLOCKING @9444b2e - 
+********************************************************************************
+Message               : null
+Element               : post:\query:application\json:muletalks-s-salesforce-api-config/processors/1 @ mac-salesforce-system-api:interface.xml:104 (Query)
+Element DSL           : <salesforce:query doc:name="Query" doc:id="2b3d04a7-8c76-4f4a-a997-e651ca8b3f46" config-ref="Salesforce_Config">
+<salesforce:salesforce-query><![CDATA[
+#[payload.soql]
+]]></salesforce:salesforce-query>
+</salesforce:query>
+Error type            : SALESFORCE:CONNECTIVITY
+FlowStack             : at post:\query:application\json:muletalks-s-salesforce-api-config(post:\query:application\json:muletalks-s-salesforce-api-config/processors/1 @ mac-salesforce-system-api:interface.xml:104 (Query))
+at muletalks-s-salesforce-api-main(muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20)
+
+  (set debug level logging or '-Dmule.verbose.exceptions=true' for everything)
+********************************************************************************
+2024-10-07T12:38:45.471Z [s65sj] - ctMessageProcessorChain.java:625)
+	at org.mule.runtime.core@4.7.3/org.mule.runtime.core.privileged.processor.chain.AbstractMessageProcessorChain$2.onNext(AbstractMessageProcessorChain.java:620)
+	at reactor.core@3.6.4/reactor.core.publisher.FluxHide$SuppressFuseableSubscriber.onNext(FluxHide.java:137)
+	at reactor.core@3.6.4/reactor.core.publisher.FluxPeekFuseable$PeekFuseableSubscriber.onNext(FluxPeekFuseable.java:210)
+	at reactor.core@3.6.4/reactor.core.publisher.FluxOnAssembly$OnAssemblySubscriber.onNext(FluxOnAssembly.java:539)
+	at reactor.core@3.6.4/reactor.core.publisher.FluxSubscribeOnValue$ScheduledScalar.run(FluxSubscribeOnValue.java:181)
+	at reactor.core@3.6.4/reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:68)
+	at reactor.core@3.6.4/reactor.core.scheduler.SchedulerTask.call(SchedulerTask.java:28)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.mule.service.scheduler@1.7.3/org.mule.service.scheduler.internal.AbstractRunnableFutureDecorator.doRun(AbstractRunnableFutureDecorator.java:180)
+	at org.mule.service.scheduler@1.7.3/org.mule.service.scheduler.internal.RunnableFutureDecorator.run(RunnableFutureDecorator.java:55)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+.
+com.sforce.soap.partner.fault.UnexpectedErrorFault: null
+	at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method) ~[?:?]
+	at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77) ~[?:?]
+	at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45) ~[?:?]
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500) ~[?:?]
+	at java.base/java.lang.reflect.ReflectAccess.newInstance(ReflectAccess.java:128) ~[?:?]
+	at java.base/jdk.internal.reflect.ReflectionFactory.newInstance(ReflectionFactory.java:347) ~[?:?]
+	at org.mule.runtime.extensions.support@4.7.3/org.mule.runtime.module.extension.internal.run
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264) [?:?]
+	at org.mule.service.scheduler@1.7.3/org.mule.service.scheduler.internal.AbstractRunnableFutureDecorator.doRun(AbstractRunnableFutureDecorator.java:180) [mule-service-scheduler-1.7.3.jar:?]
+	at org.mule.service.scheduler@1.7.3/org.mule.service.scheduler.internal.RunnableFutureDecorator.run(RunnableFutureDecorator.java:55) [mule-service-scheduler-1.7.3.jar:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) [?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) [?:?]
+	at java.base/java.lang.Thread.run(Thread.java:840) [?:?]
+2024-10-07T23:06:54.019Z WARN [s65sj] Configuration event:2f1c1329-9c73-4d8c-9c59-e60acb50dcce [MuleRuntime].uber.149: [mac-salesforce-system-api].muletalks-s-salesforce-api-main.CPU_LITE @30c39288 - No matching patterns for URI /
+2024-10-07T23:06:54.021Z ERROR [s65sj] DefaultExceptionListener event:2f1c1329-9c73-4d8c-9c59-e60acb50dcce [MuleRuntime].uber.149: [mac-salesforce-system-api].muletalks-s-salesforce-api-main.CPU_LITE @30c39288 - 
+********************************************************************************
+Message               : /
+Element               : muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20
+Element DSL           : <apikit:router config-ref="muletalks-s-salesforce-api-config"></apikit:router>
+Error type            : APIKIT:NOT_FOUND
+FlowStack             : at muletalks-s-salesforce-api-main(muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20)
+
+  (set debug level logging or '-Dmule.verbose.exceptions=true' for everything)
+********************************************************************************
+2024-10-07T23:07:17.934Z WARN [s65sj] Configuration event:cd3f1593-39bc-41ff-9f02-50cdbcbdc0a7 [MuleRuntime].uber.150: [mac-salesforce-system-api].muletalks-s-salesforce-api-main.CPU_LITE @30c39288 - No matching patterns for URI /
+2024-10-07T23:07:17.935Z ERROR [s65sj] DefaultExceptionListener event:cd3f1593-39bc-41ff-9f02-50cdbcbdc0a7 [MuleRuntime].uber.150: [mac-salesforce-system-api].muletalks-s-salesforce-api-main.CPU_LITE @30c39288 - 
+********************************************************************************
+Message               : /
+Element               : muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20
+Element DSL           : <apikit:router config-ref="muletalks-s-salesforce-api-config"></apikit:router>
+Error type            : APIKIT:NOT_FOUND
+FlowStack             : at muletalks-s-salesforce-api-main(muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20)
+
+  (set debug level logging or '-Dmule.verbose.exceptions=true' for everything)
+********************************************************************************

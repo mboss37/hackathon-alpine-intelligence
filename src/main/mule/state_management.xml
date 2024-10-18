@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:ms-aichain="http://www.mulesoft.org/schema/mule/ms-aichain"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	 xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ms-aichain http://www.mulesoft.org/schema/mule/ms-aichain/current/mule-ms-aichain.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<sub-flow name="state_manager" doc:id="84a6649a-98b6-419a-8685-4ec8b0dcd622" >
+		<file:read doc:name="Load State Configuration" doc:id="330d9d47-e1cf-4f3d-b9e6-01aaf54dd599" config-ref="State_File_Config" path="${state_llm.state_rules}" target="state_rules" outputMimeType="application/json"/>
+		<ee:transform doc:name="Generate State Foundation Prompt" doc:id="1983ed3b-cc63-4e3f-bb41-050927b1d44e" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="state_foundation" ><![CDATA[%dw 2.0
+output text/plain
+var state_foundation = "Given the following states and descriptions determine the proper state of a conversation as it evolves. Respond directly only with the state name, do not include anything else\n\nSTATE LIST:\n"
+---
+state_foundation ++
+(vars.state_rules.states reduce ((state, acc="") -> 
+    acc ++ "$(state.name) - $(state.entry_point)\n"
+)) ++ "\n"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ms-aichain:chat-answer-prompt doc:name="LLM Determine State" doc:id="1a2d3819-0211-4f24-bf6f-b1fb261f38e7" config-ref="RMA_State_LLM_Config" >
+			<ms-aichain:prompt ><![CDATA[#[%dw 2.0
+---
+vars.state_foundation as String ++
+vars.chat_history as String ++
+"PREVIOUS STATE: " ++ (vars.memory.state default "UNKNOWN") ++ "\n\n" ++
+payload.prompt as String]]]></ms-aichain:prompt>
+		</ms-aichain:chat-answer-prompt>
+		<set-payload value='#[output application/json&#10;var state_rules = (vars.state_rules.states filter $.name == payload.response)[0]&#10;---&#10;{&#10;	payload: {&#10;		prompt: vars.chat_history ++ "PREVIOUS STATE: $(vars.memory.state default "UNKNOWN")\nUser said: " ++ vars.user_prompt as String&#10;	},&#10;	state: payload.response,&#10;	flow_name: state_rules.flow_name,&#10;	template: state_rules.template,&#10;	instructions: state_rules.instructions&#10;}]' doc:name="Set Payload" doc:id="51bc5ae3-e133-458e-91dc-132fe198b113" />
+	</sub-flow>
+	<sub-flow name="load_templates" doc:id="c8f8f67d-4679-4577-a175-a09b75a25fca" >
+		<set-variable value="#[output application/json&#10;---&#10;{}]" doc:name="Template Variable Placeholder" doc:id="aa3c3a3b-6f9a-421a-acab-d6417cd9fa3d" variableName="templates" />
+		<foreach doc:name="For Each" doc:id="9a3e68f2-485e-4d4a-a17d-41672f870726" collection="#[keysOf(vars.next_step) filter ($ matches /^template|instructions/)&#10;reduce ((item, acc=[]) -&gt; &#10;    if (!isEmpty(vars.next_step[item]))&#10;        acc + {name: item, path: vars.next_step[item]}&#10;    else&#10;        acc&#10;)]" >
+			<set-variable value="#[payload]" doc:name="Save Template Details" doc:id="97e3cfef-59db-4d43-be52-077fbc4e369d" variableName="template" />
+			<os:retrieve doc:name="Retrieve From Cache" doc:id="05ce3970-212d-41d8-9184-9793e6ba8b9e" key="#[vars.template.path]">
+				<os:default-value><![CDATA[#[""]]]></os:default-value>
+			</os:retrieve>
+			<choice doc:name="If Not Cached" doc:id="452283db-518d-432b-884b-2bc7fd0ffe88" >
+				<when expression="#[isEmpty(payload)]" >
+					<file:read doc:name="Load From Template Folder" doc:id="73403ce3-945f-4fd1-aebf-12a062c47415" config-ref="Template_File_Config" path="#[vars.template.path]" />
+					<os:store doc:name="Add to Cache" doc:id="4c2db973-03f7-4c24-9530-2d58ba699d79" key="#[vars.template.path]" />
+				</when>
+			</choice>
+			<set-variable value="#[output application/json&#10;---&#10;vars.templates ++&#10;{&#10;	(vars.template.name): payload&#10;}]" doc:name="Add Template to Templates Variable Placeholder" doc:id="0ca4ab6a-9390-4705-b504-6d348cfbb20f" variableName="templates" />
+		</foreach>
+		<set-payload value="#[vars.templates]" doc:name="Return Populated Templates" doc:id="20c4e5d6-a1d7-4e5e-be29-ccdb8e95dac8" />
+		<logger level="INFO" doc:name="Logger" doc:id="5da0fc13-489d-423e-9ac3-ffe68aa18383" message="#[payload]" />
+	</sub-flow>
+</mule>

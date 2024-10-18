@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ms-aichain="http://www.mulesoft.org/schema/mule/ms-aichain" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/ms-aichain http://www.mulesoft.org/schema/mule/ms-aichain/current/mule-ms-aichain.xsd">
+	<flow name="create_logs_knowledge_store" doc:id="36c87512-bdc6-4821-bdfb-0fd753096bc0" >
+		<http:listener doc:name="Listener" doc:id="e56dfb83-bece-49e9-a19b-dffb585448dc" config-ref="HTTP_Listener_config" path="/new" />
+		<ee:transform doc:name="Prepare Store Names" doc:id="29de50a1-d333-42d0-8806-a5d47e5a82b4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[
+	{
+		storeName: p('embedding.logs.store_path'),
+	},
+	{
+		storeName: p('embedding.best_practices.store_path'),
+	}
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<parallel-foreach doc:name="Parallel For Each" doc:id="f3ecebc8-2cc3-48dd-be4d-f2fd72044e82" >
+			<ms-aichain:embedding-new-store doc:name="Embedding new store" doc:id="96514904-f525-4d75-9596-08cb233f4083" storeName="#[payload.storeName]" />
+		</parallel-foreach>
+		<ee:transform doc:name="Transform Response" doc:id="b8e11a81-61bb-462e-a1e2-671099cd86d7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="build_logs_knowledge_store" doc:id="910cc599-8afe-4d92-a73a-eb64120cde63">
+		<http:listener doc:name="Listener" doc:id="b8ecca07-2232-43ae-821b-04fd0bc2ae99" config-ref="HTTP_Listener_config" path="/load" />
+		<ee:transform doc:name="Prepare Folder Paths" doc:id="cb909ede-f2b9-4832-95db-ab16fa0e707e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+[
+	{
+		storeName: p('embedding.logs.store_path'),
+		folderPath: p('embedding.logs.document_folder'),
+		fileType: p('embedding.logs.doc_type')
+	},
+	{
+		storeName: p('embedding.best_practices.store_path'),
+		folderPath: p('embedding.best_practices.document_folder'),
+		fileType: p('embedding.best_practices.doc_type')
+	}
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<parallel-foreach doc:name="Parallel For Each" doc:id="25e30766-e734-47e8-a7a2-7a2d04f21b46">
+			<ms-aichain:embedding-add-folder-to-store doc:name="Embedding add folder to store" doc:id="2648d2cf-f05d-43dd-8a1d-9f6435ba71ac" storeName="#[payload.storeName]" contextPath="#[payload.folderPath]" maxSegmentSizeInChars="3000" maxOverlapSizeInChars="500" fileType="#[payload.fileType]" />
+		</parallel-foreach>
+		<ee:transform doc:name="Transform Response" doc:id="9886aa10-0de9-4b24-850f-6b9d1131dba0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<sub-flow name="query_knowledge_store" doc:id="5244d105-97b1-4218-96c1-2bd77e51ceb6">
+		<ms-aichain:embedding-query-from-store doc:name="Embedding query from store" doc:id="3a449c15-e0e0-4990-a7c1-ae4d087a62ba" storeName="#[vars.storeName]" maxResults="5" minScore="0.7" getLatest="true">
+			<ms-aichain:question><![CDATA[#[payload.prompt]]]></ms-aichain:question>
+		</ms-aichain:embedding-query-from-store>
+	</sub-flow>
+</mule>

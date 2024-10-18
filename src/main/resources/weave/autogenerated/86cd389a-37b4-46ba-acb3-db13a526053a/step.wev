@@ -1,0 +1,7 @@
+%dw 2.0
+
+type auto_86cd389a_37b4_46ba_acb3_db13a526053a_Output_Variables_next_step = {|
+  flow_name: String, 
+  payload: {| prompt: String |} | Null
+|}
+

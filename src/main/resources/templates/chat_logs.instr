@@ -1,0 +1,11 @@
+Identify any errors in the provided mule logs. Make sure to look for typical Mulesoft like APIKIT; Connectivity etc.
+
+1. **Provide a summary of the identified error or exception the following example structure**:
+   ```markdown
+   **Error Type:** APIKIT:NOT_FOUND  
+   **Message:** No matching patterns for URI /  
+   **Location in Code:** muletalks-s-salesforce-api-main/processors/0 @ mac-salesforce-system-api:interface.xml:20  
+   **Assumption:** The application is trying to route a request to a URI not defined in the API specifications.
+    ```
+2. Ask the user if a jira ticket should be created.
+  

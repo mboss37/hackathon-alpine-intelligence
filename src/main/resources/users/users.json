@@ -1,0 +1,20 @@
+[
+  {
+    "employee_id": 1,
+    "first_name": "Tony",
+    "last_name": "Stark",
+    "email": "tony@stark.com"
+  },
+  {
+    "employee_id": 2,
+    "first_name": "Virgina Potts",
+    "last_name": "Smith",
+    "email": "virginia@stark.com"
+  },
+  {
+    "employee_id": 3,
+    "first_name": "James",
+    "last_name": "Rhodes",
+    "email": "james@stark.com"
+  }
+]

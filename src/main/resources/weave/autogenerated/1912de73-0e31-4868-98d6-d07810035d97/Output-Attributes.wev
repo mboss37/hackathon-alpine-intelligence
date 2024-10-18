@@ -1,0 +1,16 @@
+%dw 2.0
+
+type auto_1912de73_0e31_4868_98d6_d07810035d97_Output_Attributes = {|
+  additionalAttributes?: { _?: String }, 
+  tokenUsage?: org_mule_extension_mulechain_api_metadata_TokenUsage
+|} {"typeAlias": "LLMResponseAttributes",
+"typeId": "org.mule.extension.mulechain.api.metadata.LLMResponseAttributes"}
+type org_mule_extension_mulechain_api_metadata_TokenUsage = {|
+  inputCount?: Number, 
+  outputCount?: Number, 
+  totalCount?: Number
+|} {"typeAlias": "TokenUsage",
+"typeId": "org.mule.extension.mulechain.api.metadata.TokenUsage"}
+
+
+

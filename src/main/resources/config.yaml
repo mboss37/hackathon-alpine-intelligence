@@ -1,0 +1,61 @@
+llm_config:
+  # Add additional llm configs as needed
+  state_lmm:
+    type: "OPENAI"
+    config_type: "Configuration Json"
+    file_path: "${app.home}/envVars.json"
+    model: "gpt-4o"
+    temperature: "0.8"
+    duration: "60"
+    max_tokens: "500"
+  response_lmm:
+    type: "OPENAI"
+    config_type: "Configuration Json"
+    file_path: "${app.home}/envVars.json"
+    model: "gpt-4o"
+    temperature: "0.7"
+    duration: "60"
+    max_tokens: "4096"
+
+state_llm:
+  foundation_prompt:
+    path: "${app.home}/templates"
+    file: "state_foundation.prompt"
+  state_rules: "state_rules.json"
+
+templates:
+  folder: "${app.home}/templates"
+  
+embedding:
+  logs:
+    store_path: "/Users/mbosnjak/Desktop/Hackathon/store/logs.db"
+    document_folder: "${app.home}/docs/logs"
+    doc_type: "text"
+  best_practices:
+    store_path: "/Users/mbosnjak/Desktop/Hackathon/store/docs.db"
+    document_folder: "${app.home}/docs/best-practices"
+    doc_type: "text"
+    
+tools:
+  tool_configuration_folder: "${app.home}/tools"
+
+themes:
+  folder: "${app.home}/dist/themes"
+  
+users:
+  type: "file"
+  file:
+    path: "${app.home}/users/users.json"
+    folder: "${app.home}/users"
+    file: "users.json"
+  url:
+    method: "GET"
+    url: ""
+    body: |
+      {}
+    uri_params: |
+      {}
+    headers: |
+      {}
+    query_params: |
+      {}
